@@ -3,6 +3,9 @@
 
 #include "Components/STUHealthComponent.h"
 
+#include "Dev/STUFireDamageType.h"
+#include "Dev/STUIceDamageType.h"
+
 DEFINE_LOG_CATEGORY_STATIC(LogHealthComponent, All, All);
 
 // Sets default values for this component's properties
@@ -36,4 +39,16 @@ void USTUHealthComponent::OnTakeAnyDamage(AActor* DamagedActor, float Damage, co
 {
     Health -= Damage;
     UE_LOG(LogHealthComponent, Display, TEXT("Damage: %f"), Damage);
+
+    if (DamageType)
+    {
+        if (DamageType->IsA<USTUFireDamageType>())
+        {
+            UE_LOG(LogHealthComponent, Display, TEXT("so hooooooooot !!!"));
+        }
+        else if (DamageType->IsA<USTUIceDamageType>())
+        {
+            UE_LOG(LogHealthComponent, Display, TEXT("so cooooooooold !!!"));
+        }
+    }
 }

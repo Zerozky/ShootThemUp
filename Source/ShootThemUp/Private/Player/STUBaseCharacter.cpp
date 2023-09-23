@@ -107,10 +107,13 @@ void ASTUBaseCharacter::OnDeath()
     UE_LOG(BaseCharactorLog, Display, TEXT("Player %s Is Dead."), *GetName());
 
     PlayAnimMontage(DeathAnimMontage);
-
     GetCharacterMovement()->DisableMovement();
-
     SetLifeSpan(5.0f);
+
+    if (Controller)
+    {
+        Controller->ChangeState(NAME_Spectating);
+    }
 }
 
 void ASTUBaseCharacter::OnHealthChanged(float Health)

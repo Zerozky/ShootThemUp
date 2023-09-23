@@ -8,10 +8,11 @@
 DEFINE_LOG_CATEGORY_STATIC(BaseCharactorLog, All, All);
 
 // Sets default values
-ASTUBaseCharacter::ASTUBaseCharacter(const FObjectInitializer& ObjInit) : Super(ObjInit.SetDefaultSubobjectClass<USTUCharacterMovementComponent>(ACharacter::CharacterMovementComponentName))
+ASTUBaseCharacter::ASTUBaseCharacter(const FObjectInitializer& ObjInit)
+    : Super(ObjInit.SetDefaultSubobjectClass<USTUCharacterMovementComponent>(ACharacter::CharacterMovementComponentName))
 {
- 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+    // Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+    PrimaryActorTick.bCanEverTick = true;
 
     SpringArmComponent = CreateDefaultSubobject<USpringArmComponent>("SpringArmComponent");
     SpringArmComponent->SetupAttachment(GetRootComponent());
@@ -29,26 +30,29 @@ ASTUBaseCharacter::ASTUBaseCharacter(const FObjectInitializer& ObjInit) : Super(
 // Called when the game starts or when spawned
 void ASTUBaseCharacter::BeginPlay()
 {
-	Super::BeginPlay();
+    Super::BeginPlay();
 
     check(HealthComponent);
     check(HealthTextComponent);
-    
+    check(GetCharacterMovement())
+
+    OnHealthChanged(HealthComponent->GetHealth());
+    HealthComponent->OnDeath.AddUObject(this, &ASTUBaseCharacter::OnDeath);
+    HealthComponent->OnHealthChanged.AddUObject(this, &ASTUBaseCharacter::OnHealthChanged);
+
 }
 
 // Called every frame
 void ASTUBaseCharacter::Tick(float DeltaTime)
 {
-	Super::Tick(DeltaTime);
+    Super::Tick(DeltaTime);
 
-    const auto Health = HealthComponent->GetHealth();
-    HealthTextComponent->SetText(FText::FromString(FString::Printf(TEXT("%.1f"), Health)));
 }
 
 // Called to bind functionality to input
 void ASTUBaseCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
-	Super::SetupPlayerInputComponent(PlayerInputComponent);
+    Super::SetupPlayerInputComponent(PlayerInputComponent);
 
     PlayerInputComponent->BindAxis("MoveForward", this, &ASTUBaseCharacter::MoveForward);
     PlayerInputComponent->BindAxis("MoveRight", this, &ASTUBaseCharacter::MoveRight);
@@ -67,7 +71,7 @@ bool ASTUBaseCharacter::IsRunning() const
 float ASTUBaseCharacter::GetMovementDirection() const
 {
     if (GetVelocity().IsZero()) return 0.0f;
-    
+
     const auto VelocityNormal = GetVelocity().GetSafeNormal();
     const auto AngleBetween = FMath::Acos(FVector::DotProduct(GetActorForwardVector(), VelocityNormal));
     const auto CrossProduct = FVector::CrossProduct(GetActorForwardVector(), VelocityNormal);
@@ -96,4 +100,20 @@ void ASTUBaseCharacter::OnStartRunning()
 void ASTUBaseCharacter::OnStopRunning()
 {
     WantsToRun = false;
+}
+
+void ASTUBaseCharacter::OnDeath()
+{
+    UE_LOG(BaseCharactorLog, Display, TEXT("Player %s Is Dead."), *GetName());
+
+    PlayAnimMontage(DeathAnimMontage);
+
+    GetCharacterMovement()->DisableMovement();
+
+    SetLifeSpan(5.0f);
+}
+
+void ASTUBaseCharacter::OnHealthChanged(float Health)
+{
+    HealthTextComponent->SetText(FText::FromString(FString::Printf(TEXT("%.1f"), Health)));
 }

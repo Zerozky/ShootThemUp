@@ -3,6 +3,7 @@
 
 #include "Player/STUBaseCharacter.h"
 
+#include "Components/CapsuleComponent.h"
 #include "Components/STUCharacterMovementComponent.h"
 #include "Components/STUWeaponComponent.h"
 
@@ -125,6 +126,7 @@ void ASTUBaseCharacter::OnDeath()
     {
         Controller->ChangeState(NAME_Spectating);
     }
+    GetCapsuleComponent()->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 }
 
 void ASTUBaseCharacter::OnHealthChanged(float Health)
